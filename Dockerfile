@@ -26,9 +26,9 @@ RUN add-apt-repository -y ppa:nginx/stable
 RUN add-apt-repository -y ppa:ondrej/php5
 
 ## MariaDB
-RUN apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xcbcb082a1bb943db
-RUN echo "deb http://ftp.osuosl.org/pub/mariadb/repo/5.5/ubuntu precise main" >> /etc/apt/sources.list.d/mariadb.list
-RUN echo "deb-src http://ftp.osuosl.org/pub/mariadb/repo/5.5/ubuntu precise main" >> /etc/apt/sources.list.d/mariadb.list
+#RUN apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xcbcb082a1bb943db
+#RUN echo "deb http://ftp.osuosl.org/pub/mariadb/repo/5.5/ubuntu precise main" >> /etc/apt/sources.list.d/mariadb.list
+#RUN echo "deb-src http://ftp.osuosl.org/pub/mariadb/repo/5.5/ubuntu precise main" >> /etc/apt/sources.list.d/mariadb.list
 
 RUN apt-get update
 RUN apt-get -y upgrade
@@ -55,6 +55,8 @@ ADD ./supervisor/php-fpm.conf /etc/supervisor/conf.d/php-fpm.conf
 #RUN echo mariadb-server mysql-server/root_password password password | debconf-set-selections
 #RUN echo mariadb-server mysql-server/root_password_again password password | debconf-set-selections
 #RUN DEBIAN_FRONTEND=noninteractive apt-get install -y mariadb-server
+
+## MySQL
 RUN echo mysql-server mysql-server/root_password password '' | debconf-set-selections
 RUN echo mysql-server mysql-server/root_password_again password '' | debconf-set-selections
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install mysql-server
@@ -63,7 +65,7 @@ RUN update-rc.d mysql disable
 
 RUN sed -i "/^innodb_buffer_pool_size*/ s|=.*|= 128M|" /etc/mysql/my.cnf
 RUN sed -i "s/log_slow_verbosity/#log_slow_verbosity/" /etc/mysql/my.cnf
-ADD ./supervisor/mariadb.conf /etc/supervisor/conf.d/mariadb.conf
+ADD ./supervisor/mysql.conf /etc/supervisor/conf.d/mysql.conf
 
 ADD ./start.sh /
 ADD ./startup /startup
