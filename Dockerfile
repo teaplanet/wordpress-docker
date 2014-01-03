@@ -75,7 +75,7 @@ ADD ./supervisor/mysql.conf /etc/supervisor/conf.d/mysql.conf
 ## user
 RUN useradd -d /home/ken -g users -k /etc/skel -m -s /bin/bash ken
 RUN yes password | passwd ken
-RUN echo -e "ken\tALL=(ALL:ALL) ALL" > /etc/sudoers.d/ken
+RUN echo "ken	ALL=(ALL:ALL) ALL" | visudo -c -f /etc/sudoers.d/ken
 RUN chmod 440 /etc/sudoers.d/ken
 
 ADD ./start.sh /
