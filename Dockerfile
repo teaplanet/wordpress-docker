@@ -1,3 +1,10 @@
+FROM ubuntu:12.04
+MAINTAINER Ken(@teaplanet)
+
+# upstart on Docker
+RUN dpkg-divert --local --rename --add /sbin/initctl
+RUN ln -s /bin/true /sbin/initctl
+
 # mount
 RUN cat /proc/mounts > /etc/mtab
 
@@ -16,17 +23,18 @@ RUN ln -s /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
 RUN add-apt-repository -y ppa:nginx/stable
 
 ## PHP
-RUN add-apt-repository -y ppa:brianmercer/php5
+RUN add-apt-repository -y ppa:ondrej/php5
 
 ## MariaDB
 RUN apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xcbcb082a1bb943db
-RUN add-apt-repository 'deb http://ftp.yz.yamagata-u.ac.jp/pub/dbms/mariadb/repo/10.0/ubuntu precise main'
+RUN echo "deb http://ftp.osuosl.org/pub/mariadb/repo/5.5/ubuntu precise main" >> /etc/apt/sources.list.d/mariadb.list
+RUN echo "deb-src http://ftp.osuosl.org/pub/mariadb/repo/5.5/ubuntu precise main" >> /etc/apt/sources.list.d/mariadb.list
 
 RUN apt-get update
 RUN apt-get -y upgrade
 
 
-# setup
+# install & setup
 ## nginx
 RUN apt-get -y install nginx
 RUN service nginx stop
@@ -37,35 +45,27 @@ ADD ./supervisor/nginx.conf /etc/supervisor/conf.d/nginx.conf
 ADD ./nginx-site /etc/nginx/sites-available/default
 
 ## PHP5
-RUN apt-get -y install php5-fpm php5-mysql
+RUN apt-get -y install php5-fpm php5-mysql php5-curl php5-gd php5-intl php-pear php5-imagick php5-imap php5-mcrypt php5-memcache php5-ming php5-ps php5-pspell php5-recode php5-snmp php5-sqlite php5-tidy php5-xmlrpc php5-xsl
 RUN service php5-fpm stop
-RUN update-rc.d php5-fpm disable
 
 RUN sed -i "s/;daemonize\s*=\s*yes/daemonize = no/g" /etc/php5/fpm/php-fpm.conf
 ADD ./supervisor/php-fpm.conf /etc/supervisor/conf.d/php-fpm.conf
 
 ## MariaDB
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -q -y mariadb-server
+#RUN echo mariadb-server mysql-server/root_password password password | debconf-set-selections
+#RUN echo mariadb-server mysql-server/root_password_again password password | debconf-set-selections
+#RUN DEBIAN_FRONTEND=noninteractive apt-get install -y mariadb-server
+RUN echo mysql-server mysql-server/root_password password '' | debconf-set-selections
+RUN echo mysql-server mysql-server/root_password_again password '' | debconf-set-selections
+RUN DEBIAN_FRONTEND=noninteractive apt-get -y install mysql-server
 RUN service mysql stop
 RUN update-rc.d mysql disable
 
-RUN sed -i "s/\(datadir[^=]\+= \).\+/\1\/blog\/db/" /etc/mysql/my.cnf
+RUN sed -i "/^innodb_buffer_pool_size*/ s|=.*|= 128M|" /etc/mysql/my.cnf
+RUN sed -i "s/log_slow_verbosity/#log_slow_verbosity/" /etc/mysql/my.cnf
+ADD ./supervisor/mariadb.conf /etc/supervisor/conf.d/mariadb.conf
 
-## WordPress
-RUN mkdir -p /blog/db
-RUN cd /blog
-RUN curl -O http://ja.wordpress.org/latest-ja.zip
-RUN unzip latest-ja.zip
-RUN rm latest-ja.zip
+ADD ./start.sh /
+ADD ./startup /startup
 
-### change owner
-RUN chown -R www-data:www-data wordpress
-RUN chown -R mysql:mysql /blog/db
-
-# run options
-EXPOSE 10022:22
-EXPOSE 10080:80
-
-VOLUME ["/data", "/blog"]
-
-CMD ["/usr/bin/supervisord"]
+CMD ["/bin/sh", "/start.sh"]
