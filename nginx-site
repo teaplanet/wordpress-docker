@@ -65,6 +65,11 @@ server {
 		include fastcgi_params;
 	}
 
+	# WordPress permalink
+	if (!-e $request_filename) {
+		rewrite ^/(.+)$ /index.php?q=$1 last;
+	}
+
 	# deny access to .htaccess files, if Apache's document root
 	# concurs with nginx's one
 	#
