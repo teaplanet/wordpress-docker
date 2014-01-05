@@ -4,7 +4,7 @@ MAINTAINER Ken(@teaplanet)
 # locale
 RUN locale-gen ja_JP.UTF-8
 RUN update-locale LANG=ja_JP.UTF-8
-ENV LANG=ja_JP.UTF-8
+ENV LANG ja_JP.UTF-8
 
 # upstart on Docker
 RUN dpkg-divert --local --rename --add /sbin/initctl
