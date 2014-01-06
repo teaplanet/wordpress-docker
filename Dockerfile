@@ -76,6 +76,7 @@ RUN update-rc.d mysql disable
 RUN sed -i "/^innodb_buffer_pool_size*/ s|=.*|= 128M|" /etc/mysql/my.cnf
 RUN sed -i "s/log_slow_verbosity/#log_slow_verbosity/" /etc/mysql/my.cnf
 ADD ./supervisor/mysql.conf /etc/supervisor/conf.d/mysql.conf
+ADD ./character_set.cnf /etc/mysql/conf.d/character_set.cnf
 
 ## user
 RUN useradd -d /home/ken -g users -k /etc/skel -m -s /bin/bash ken
