@@ -84,6 +84,7 @@ RUN yes password | passwd ken
 RUN echo "ken	ALL=(ALL:ALL) ALL" > /etc/sudoers.d/ken
 RUN chmod 440 /etc/sudoers.d/ken
 
+ADD http://ja.wordpress.org/latest-ja.zip /latest-ja.zip
 ADD ./start.sh /
 ADD ./startup /startup
 
